@@ -8,7 +8,7 @@ import {
   SignIn,
   UserButton,
 } from "@clerk/clerk-react";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
 
 const ADMIN_EMAILS = ["yadnesh2105@gmail.com", "goursheteatharva@gmail.com"];
 const ProtectedRoute = ({ children }) => {
@@ -110,7 +110,7 @@ function Nav() {
                   />
                   <UserButton.Link
                     label="Cart"
-                    labelIcon={<Heart size={15} className="text-purple-600" />}
+                    labelIcon={<ShoppingCart size={15} className="text-purple-600" />}
                     href="/cart"
                   />
                 </UserButton.MenuItems>

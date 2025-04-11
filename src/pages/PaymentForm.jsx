@@ -1,131 +1,359 @@
-import React, { useState } from 'react';
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-
-// Custom styling for the CardElement
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      color: '#32325d',
-      fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-      fontSmoothing: 'antialiased',
-      fontSize: '16px',
-      '::placeholder': {
-        color: '#aab7c4',
-      },
-    },
-    invalid: {
-      color: '#fa755a',
-      iconColor: '#fa755a',
-    },
-  },
-};
+import React, { useState } from "react";
+import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 const PaymentForm = () => {
   const stripe = useStripe();
   const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [selectedMethod, setSelectedMethod] = useState("card");
+  const [subOption, setSubOption] = useState("");
+  const [proceed, setProceed] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (!stripe || !elements) {
       return;
     }
 
-    setIsProcessing(true);
+    setLoading(true);
+    setMessage("");
 
-    const { error, paymentIntent } = await stripe.confirmCardPayment('your-client-secret', {
-      payment_method: {
-        card: elements.getElement(CardElement),
-        billing_details: {
-          name: 'Test User', // Replace with dynamic user data
-        },
-      },
-    });
+    const cardElement = elements.getElement(CardElement);
 
-    setIsProcessing(false);
+    const { error, token } = await stripe.createToken(cardElement);
 
     if (error) {
-      setPaymentMessage(error.message);
-    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      setPaymentMessage('Payment successful!');
+      setMessage(error.message);
+    } else {
+      setMessage(`Payment Successful! Token: ${token.id}`);
     }
+
+    setLoading(false);
   };
 
   return (
-    <div style={styles.container} className='items-center'>
-      <h2 style={styles.heading}>Complete Your Payment</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.cardElementContainer}>
-          <CardElement options={CARD_ELEMENT_OPTIONS} />
-        </div>
-        <button
-          type="submit"
-          style={styles.button}
-          disabled={!stripe || isProcessing}
+    <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md bg-white">
+      <h2 className="text-xl font-bold mb-4">Accomodation Cost</h2>
+      <div className="mb-4">
+        <label className="block font-medium mb-2">Select Payment Method:</label>
+        <select
+          value={selectedMethod}
+          onChange={(e) => {
+            setSelectedMethod(e.target.value);
+            setSubOption(""); 
+            setProceed(false); 
+          }}
+          className="w-full p-2 border rounded-md"
         >
-          {isProcessing ? 'Processing...' : 'Pay Now'}
-        </button>
-        {paymentMessage && <p style={styles.message}>{paymentMessage}</p>}
-      </form>
+          <option value="card">Credit / Debit Card</option>
+          <option value="upi">UPI</option>
+          <option value="netbanking">Net Banking</option>
+          <option value="wallet">Wallet</option>
+        </select>
+      </div>
+
+      
+      {selectedMethod === "card" && (
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Select Card Type:</label>
+          <select
+            value={subOption}
+            onChange={(e) => setSubOption(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Select</option>
+            <option value="visa">Visa</option>
+            <option value="mastercard">MasterCard</option>
+            <option value="rupay">RuPay</option>
+          </select>
+        </div>
+      )}
+
+      {selectedMethod === "upi" && (
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Select UPI App:</label>
+          <select
+            value={subOption}
+            onChange={(e) => setSubOption(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Select</option>
+            <option value="googlepay">Google Pay</option>
+            <option value="phonepe">PhonePe</option>
+            <option value="paytm">Paytm</option>
+          </select>
+          {subOption && (
+            <input
+              type="text"
+              placeholder="Enter UPI ID"
+              className="mt-2 p-2 border rounded-md w-full"
+            />
+          )}
+        </div>
+      )}
+
+      {selectedMethod === "netbanking" && (
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Select Bank:</label>
+          <select
+            value={subOption}
+            onChange={(e) => setSubOption(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Select</option>
+            <option value="sbi">State Bank of India</option>
+            <option value="hdfc">HDFC Bank</option>
+            <option value="icici">ICICI Bank</option>
+            <option value="axis">Axis Bank</option>
+          </select>
+        </div>
+      )}
+
+      {selectedMethod === "wallet" && (
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Select Wallet:</label>
+          <select
+            value={subOption}
+            onChange={(e) => setSubOption(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Select</option>
+            <option value="paytm">Paytm Wallet</option>
+            <option value="amazonpay">Amazon Pay</option>
+            <option value="mobikwik">Mobikwik</option>
+          </select>
+        </div>
+      )}
+
+      
+      <button
+        onClick={() => setProceed(true)}
+        disabled={!subOption && selectedMethod !== "card"}
+        className="w-full px-4 py-2 bg-green-500 text-white rounded disabled:bg-gray-400"
+      >
+        Proceed to Payment
+      </button>
+
+      
+      {proceed && selectedMethod === "card" && (
+        <form onSubmit={handleSubmit} className="mt-4">
+          <CardElement className="p-2 border rounded-md" />
+          <button
+            type="submit"
+            disabled={!stripe || loading}
+            className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+          >
+            {loading ? "Processing..." : "Pay ₹100"}
+          </button>
+        </form>
+      )}
+
+      
+      {message && <p className="mt-2 text-green-600">{message}</p>}
     </div>
   );
 };
 
-// Inline styling
-const styles = {
-  container: {
-    maxWidth: '400px',
-    margin: '0 auto',
-    padding: '20px',
-    border: '1px solid #e6ebf1',
-    borderRadius: '8px',
-    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#fff',
-  },
-  heading: {
-    fontSize: '1.5rem',
-    color: '#32325d',
-    textAlign: 'center',
-    marginBottom: '20px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-  },
-  cardElementContainer: {
-    padding: '10px',
-    border: '1px solid #e6ebf1',
-    borderRadius: '4px',
-    backgroundColor: '#f8f9fa',
-  },
-  button: {
-    backgroundColor: '#6772e5',
-    color: '#fff',
-    fontSize: '16px',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    transition: 'background-color 0.3s',
-  },
-  buttonHover: {
-    backgroundColor: '#5469d4',
-  },
-  buttonDisabled: {
-    backgroundColor: '#cfd7df',
-    cursor: 'not-allowed',
-  },
-  message: {
-    marginTop: '10px',
-    fontSize: '14px',
-    textAlign: 'center',
-    color: '#fa755a',
-  },
-};
-
 export default PaymentForm;
+
+// import React, { useState } from "react";
+// import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+// const PaymentForm = ({ cartItems, totalAmount }) => {
+//   const stripe = useStripe();
+//   const elements = useElements();
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState("");
+//   const [selectedMethod, setSelectedMethod] = useState("card");
+//   const [subOption, setSubOption] = useState("");
+//   const [proceed, setProceed] = useState(false);
+//   const [transactionId, setTransactionId] = useState(null);
+//   const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+//   const handleSubmit = async (event) => {
+//     event.preventDefault();
+
+//     if (!stripe || !elements) {
+//       return;
+//     }
+
+//     setLoading(true);
+//     setMessage("");
+
+//     const cardElement = elements.getElement(CardElement);
+//     const { error, token } = await stripe.createToken(cardElement);
+
+//     if (error) {
+//       setMessage(error.message);
+//     } else {
+//       setMessage("Payment Successful!");
+//       setTransactionId(token.id);
+//       setPaymentSuccess(true);
+//     }
+
+//     setLoading(false);
+//   };
+
+//   const handlePrint = () => {
+//     window.print(); // Opens the print dialog for downloading/printing the receipt.
+//   };
+
+//   return (
+//     <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md bg-white">
+//       <h2 className="text-xl font-bold mb-4">Stripe Payment</h2>
+
+//       {!paymentSuccess ? (
+//         <>
+//           {/* Payment Method Selection */}
+//           <div className="mb-4">
+//             <label className="block font-medium mb-2">Select Payment Method:</label>
+//             <select
+//               value={selectedMethod}
+//               onChange={(e) => {
+//                 setSelectedMethod(e.target.value);
+//                 setSubOption("");
+//                 setProceed(false);
+//               }}
+//               className="w-full p-2 border rounded-md"
+//             >
+//               <option value="card">Credit / Debit Card</option>
+//               <option value="upi">UPI</option>
+//               <option value="netbanking">Net Banking</option>
+//               <option value="wallet">Wallet</option>
+//             </select>
+//           </div>
+
+//           {/* Sub-options based on Payment Method */}
+//           {selectedMethod === "card" && (
+//             <div className="mb-4">
+//               <label className="block font-medium mb-2">Select Card Type:</label>
+//               <select
+//                 value={subOption}
+//                 onChange={(e) => setSubOption(e.target.value)}
+//                 className="w-full p-2 border rounded-md"
+//               >
+//                 <option value="">Select</option>
+//                 <option value="visa">Visa</option>
+//                 <option value="mastercard">MasterCard</option>
+//                 <option value="rupay">RuPay</option>
+//               </select>
+//             </div>
+//           )}
+
+//           {selectedMethod === "upi" && (
+//             <div className="mb-4">
+//               <label className="block font-medium mb-2">Select UPI App:</label>
+//               <select
+//                 value={subOption}
+//                 onChange={(e) => setSubOption(e.target.value)}
+//                 className="w-full p-2 border rounded-md"
+//               >
+//                 <option value="">Select</option>
+//                 <option value="googlepay">Google Pay</option>
+//                 <option value="phonepe">PhonePe</option>
+//                 <option value="paytm">Paytm</option>
+//               </select>
+//               {subOption && (
+//                 <input
+//                   type="text"
+//                   placeholder="Enter UPI ID"
+//                   className="mt-2 p-2 border rounded-md w-full"
+//                 />
+//               )}
+//             </div>
+//           )}
+
+//           {selectedMethod === "netbanking" && (
+//             <div className="mb-4">
+//               <label className="block font-medium mb-2">Select Bank:</label>
+//               <select
+//                 value={subOption}
+//                 onChange={(e) => setSubOption(e.target.value)}
+//                 className="w-full p-2 border rounded-md"
+//               >
+//                 <option value="">Select</option>
+//                 <option value="sbi">State Bank of India</option>
+//                 <option value="hdfc">HDFC Bank</option>
+//                 <option value="icici">ICICI Bank</option>
+//                 <option value="axis">Axis Bank</option>
+//               </select>
+//             </div>
+//           )}
+
+//           {selectedMethod === "wallet" && (
+//             <div className="mb-4">
+//               <label className="block font-medium mb-2">Select Wallet:</label>
+//               <select
+//                 value={subOption}
+//                 onChange={(e) => setSubOption(e.target.value)}
+//                 className="w-full p-2 border rounded-md"
+//               >
+//                 <option value="">Select</option>
+//                 <option value="paytm">Paytm Wallet</option>
+//                 <option value="amazonpay">Amazon Pay</option>
+//                 <option value="mobikwik">Mobikwik</option>
+//               </select>
+//             </div>
+//           )}
+
+//           {/* Proceed to Payment Button */}
+//           <button
+//             onClick={() => setProceed(true)}
+//             disabled={!subOption && selectedMethod !== "card"}
+//             className="w-full px-4 py-2 bg-green-500 text-white rounded disabled:bg-gray-400"
+//           >
+//             Proceed to Payment
+//           </button>
+
+//           {/* Payment Form for Card */}
+//           {proceed && selectedMethod === "card" && (
+//             <form onSubmit={handleSubmit} className="mt-4">
+//               <CardElement className="p-2 border rounded-md" />
+//               <button
+//                 type="submit"
+//                 disabled={!stripe || loading}
+//                 className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+//               >
+//                 {loading ? "Processing..." : `Pay ₹${totalAmount}`}
+//               </button>
+//             </form>
+//           )}
+
+//           {/* Display Message after Payment */}
+//           {message && <p className="mt-2 text-green-600">{message}</p>}
+//         </>
+//       ) : (
+//         <>
+//           {/* Receipt Section */}
+//           <div className="mt-4 p-4 border rounded bg-gray-100">
+//             <h3 className="text-lg font-bold mb-2">Payment Receipt</h3>
+//             <p><strong>Transaction ID:</strong> {transactionId}</p>
+//             <p><strong>Payment Method:</strong> {selectedMethod} {subOption && `(${subOption})`}</p>
+//             <p><strong>Total Amount Paid:</strong> ₹{totalAmount}</p>
+
+//             <h4 className="text-md font-semibold mt-3">Purchased Items:</h4>
+//             <ul className="list-disc ml-5">
+//               {cartItems.map((item, index) => (
+//                 <li key={index}>{item.name} (x{item.quantity}) - ₹{item.price * item.quantity}</li>
+//               ))}
+//             </ul>
+
+//             {/* Print Receipt Button */}
+//             <button
+//               onClick={handlePrint}
+//               className="mt-4 w-full px-4 py-2 bg-gray-800 text-white rounded"
+//             >
+//               Download / Print Receipt
+//             </button>
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default PaymentForm;
+
+

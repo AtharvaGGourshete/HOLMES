@@ -30,7 +30,7 @@ export default function Addtocart() {
   };
 
   function handleClick() {
-    return toast({ title: "PG Selected" });
+    return toast({ title: "PG Selected Proceed with Payment" });
   }
 
   return (
@@ -66,25 +66,21 @@ export default function Addtocart() {
                   <p className="text-gray-800 font-semibold">{pg.price}</p>
                 </div>
                 <div className="ml-auto flex gap-4">
+                <Link to="/payment-method">
                   <Button
                     onClick={handleClick}
                     className="bg-green-500 hover:bg-green-300 text-white rounded-xl"
                   >
                     Proceed
                   </Button>
+                  </Link>
                   <Button
                     onClick={() => removeFromCart(pg.id)}
                     className="bg-red-500 hover:bg-red-300 text-white rounded-xl"
                   >
                     Remove
                   </Button>
-                  <Link to="/payment">
-                  <Button
-                    className="bg-blue-500 hover:bg-red-300 text-white rounded-xl"
-                  >
-                    Payment
-                  </Button>
-                  </Link>
+                  
                 </div>
               </li>
             ))}

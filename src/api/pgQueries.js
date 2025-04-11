@@ -1,12 +1,7 @@
-
 import supabaseClient from "../utils/supabase.js";
-
-
 
 export async function addPG(token, _,pgData) {
   const supabase = await supabaseClient(token);
-
-
   const { data, error} = await supabase
     .from("listpg")
     .insert([pgData])

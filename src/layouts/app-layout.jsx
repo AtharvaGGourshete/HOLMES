@@ -9,7 +9,7 @@ const AppLayout = () => {
      
      <main className='min-h-screen'>
       <Nav/>
-      <Toaster />
+      <Toaster /> 
       <Outlet />
      </main>
     </div>

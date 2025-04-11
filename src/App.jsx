@@ -47,6 +47,15 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/payment-method",
+        element: (
+          <ProtectedRoute>
+            <PaymentForm />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
         path: "/payment",
         element: (
           <ProtectedRoute>
