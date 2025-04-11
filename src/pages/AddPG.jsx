@@ -1,178 +1,253 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Building2Icon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import supabase from "@/config/supabase";
 
-const pgSchema = z.object({
-  name: z.string().min(3, "PG name must be at least 3 characters"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  ownerName: z.string().min(3, "Owner's name must be at least 3 characters"),
-  ownerMobile: z
-    .string()
-    .regex(/^\d{10}$/, "Mobile number must be 10 digits"),
-  rent: z.string().regex(/^\d+$/, "Rent price must be a valid number"),
-  bhk: z.enum(["1 BHK", "2 BHK", "3 BHK", "Studio"]),
-});
-
-function AddPG() {
+const AddPG = () => {
   const { toast } = useToast();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(pgSchema),
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    PG_Name: "",
+    Address: "",
+    Owner_Name: "",
+    Owner_Phone_no: "",
+    Rent_Price: "",
+    BHK: "",
+    img: "",
+    amenities: "",
   });
 
-  const onSubmit = async (formData) => {
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.PG_Name || formData.PG_Name.length < 3) {
+      newErrors.PG_Name = "PG name must be at least 3 characters";
+    }
+
+    if (!formData.Address || formData.Address.length < 5) {
+      newErrors.Address = "Address must be at least 5 characters";
+    }
+
+    if (!formData.Owner_Name || formData.Owner_Name.length < 3) {
+      newErrors.Owner_Name = "Owner's name must be at least 3 characters";
+    }
+
+    if (!/^\d{10}$/.test(formData.Owner_Phone_no)) {
+      newErrors.Owner_Phone_no = "Mobile number must be 10 digits";
+    }
+
+    if (!/^\d+$/.test(formData.Rent_Price)) {
+      newErrors.Rent_Price = "Rent Price must be a valid number";
+    }
+
+    if (!formData.BHK) {
+      newErrors.BHK = "Please select a BHK type";
+    }
+    if (!formData.img) {
+      newErrors.img = "Please select an image";
+    }
+
+    if (!formData.amenities) {
+      newErrors.amenities = "Please select an image";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
     try {
-      // Insert data into Supabase table
-      const { data, error } = await supabase.from('addpg').insert([
+      const { error } = await supabase.from("insert_pg").insert([
         {
-          PG_Name: formData.name,
-          Address: formData.address,
-          Owner_Name: formData.ownerName,
-          Owner_Phone_no: formData.ownerMobile,
-          Rent_Price: formData.rent,
-          BHK: formData.bhk
-        }
+          PG_Name: formData.PG_Name,
+          Address: formData.Address,
+          Owner_Name: formData.Owner_Name,
+          Owner_Phone_no: formData.Owner_Phone_no,
+          Rent_Price: parseFloat(formData.Rent_Price),
+          BHK: formData.BHK,
+          img: formData.img,
+          amenities: formData.amenities,
+        },
       ]);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Handle success, e.g., show a success toast
-      handleClick();
-      console.log("PG added successfully:", data);
-    } catch (error) {
-      // Handle errors, e.g., show an error toast
-      console.error("Error adding PG:", error.message);
+      toast({ title: "PG listed successfully ✅" });
+
+      setFormData({
+        PG_Name: "",
+        Address: "",
+        Owner_Name: "",
+        Owner_Phone_no: "",
+        Rent_Price: "",
+        BHK: "",
+        img: "",
+        amenities: "",
+      });
+
+      setErrors({});
+      navigate("/listed-pgs", { state: formData });
+    } catch (err) {
+      toast({
+        title: "Failed to list PG",
+        description: err.message,
+        variant: "destructive",
+      });
     }
   };
 
-  function handleClick() {
-    toast({ title: "PG Listed to HOLMES" });
-  }
-
   return (
-    <div className="w-1/2 mx-auto mt-10 bg-white shadow-lg rounded-lg p-6">
-      <div className="flex items-center gap-2">
-        <Building2Icon className="mb-2" />
-        <h2 className="text-2xl font-bold text-purple-700 mb-4">
-          List Your PG
-        </h2>
+    <div className="min-h-screen bg-gray-100 flex justify-center items-start py-10 px-4">
+      <div className="w-full max-w-5xl bg-white p-10 rounded-xl shadow-lg border border-purple-300">
+        <div className="flex items-center gap-3 mb-8">
+          <Building2Icon className="text-purple-600 w-6 h-6" />
+          <h2 className="text-3xl font-bold text-purple-700">List Your PG</h2>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* PG Name */}
+            <div>
+              <label className="block font-semibold text-purple-800">PG Name</label>
+              <input
+                type="text"
+                name="PG_Name"
+                placeholder="Enter PG Name"
+                value={formData.PG_Name}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.PG_Name && <p className="text-red-500 text-sm mt-1">{errors.PG_Name}</p>}
+            </div>
+
+            {/* Owner Name */}
+            <div>
+              <label className="block font-semibold text-purple-800">Owner's Name</label>
+              <input
+                type="text"
+                name="Owner_Name"
+                placeholder="Enter Owner's Name"
+                value={formData.Owner_Name}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.Owner_Name && <p className="text-red-500 text-sm mt-1">{errors.Owner_Name}</p>}
+            </div>
+
+            {/* Address */}
+            <div className="md:col-span-2">
+              <label className="block font-semibold text-purple-800">Address</label>
+              <textarea
+                name="Address"
+                placeholder="Enter Address"
+                value={formData.Address}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.Address && <p className="text-red-500 text-sm mt-1">{errors.Address}</p>}
+            </div>
+
+            {/* Owner Phone No */}
+            <div>
+              <label className="block font-semibold text-purple-800">Owner's Mobile</label>
+              <input
+                type="text"
+                placeholder="Enter Owner's Mobile No"
+                name="Owner_Phone_no"
+                value={formData.Owner_Phone_no}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.Owner_Phone_no && <p className="text-red-500 text-sm mt-1">{errors.Owner_Phone_no}</p>}
+            </div>
+
+            {/* Rent Price */}
+            <div>
+              <label className="block font-semibold text-purple-800">Rent Price (₹)</label>
+              <input
+                type="text"
+                placeholder="Enter Rent Price"
+                name="Rent_Price"
+                value={formData.Rent_Price}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.Rent_Price && <p className="text-red-500 text-sm mt-1">{errors.Rent_Price}</p>}
+            </div>
+
+            <div>
+              <label className="block font-semibold text-purple-800">Add Amenities</label>
+              <input
+                type="text"
+                placeholder="Add Amenities"
+                name="amenities"
+                value={formData.amenities}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.Rent_Price && <p className="text-red-500 text-sm mt-1">{errors.Rent_Price}</p>}
+            </div>
+
+            {/* BHK */}
+            <div>
+              <label className="block font-semibold text-purple-800">BHK Type</label>
+              <select
+                name="BHK"
+                value={formData.BHK}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                <option value="">Select BHK</option>
+                <option value="1 BHK">1 BHK</option>
+                <option value="2 BHK">2 BHK</option>
+                <option value="3 BHK">3 BHK</option>
+                <option value="Studio">Studio</option>
+              </select>
+              {errors.BHK && <p className="text-red-500 text-sm mt-1">{errors.BHK}</p>}
+            </div>
+
+            
+
+            {/* Image Link */}
+            <div className="md:col-span-2">
+              <label className="block font-semibold text-purple-800">Add Image Link</label>
+              <input
+                type="text"
+                name="img"
+                placeholder="Add image link"
+                value={formData.img}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              {errors.img && <p className="text-red-500 text-sm mt-1">{errors.img}</p>}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-center mt-10">
+            <button
+              type="submit"
+              className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-200"
+            >
+              List PG
+            </button>
+          </div>
+        </form>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* PG Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            PG Name
-          </label>
-          <input
-            type="text"
-            {...register("name")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Address */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Address
-          </label>
-          <textarea
-            {...register("address")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.address && (
-            <p className="text-red-500 text-sm">{errors.address.message}</p>
-          )}
-        </div>
-
-        {/* Owner's Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Owner's Name
-          </label>
-          <input
-            type="text"
-            {...register("ownerName")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.ownerName && (
-            <p className="text-red-500 text-sm">{errors.ownerName.message}</p>
-          )}
-        </div>
-
-        {/* Owner's Mobile Number */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Owner's Mobile Number
-          </label>
-          <input
-            type="text"
-            {...register("ownerMobile")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.ownerMobile && (
-            <p className="text-red-500 text-sm">{errors.ownerMobile.message}</p>
-          )}
-        </div>
-
-        {/* Rent Price */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Rent Price (₹)
-          </label>
-          <input
-            type="text"
-            {...register("rent")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.rent && (
-            <p className="text-red-500 text-sm">{errors.rent.message}</p>
-          )}
-        </div>
-
-        {/* BHK Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            BHK Type
-          </label>
-          <select
-            {...register("bhk")}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          >
-            <option value="">Select BHK</option>
-            <option value="1 BHK">1 BHK</option>
-            <option value="2 BHK">2 BHK</option>
-            <option value="3 BHK">3 BHK</option>
-            <option value="Studio">Studio</option>
-          </select>
-          {errors.bhk && (
-            <p className="text-red-500 text-sm">{errors.bhk.message}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            onClick={handleClick}
-            className="w-5/6 mt-5 rounded-xl flex justify-center bg-purple-600 text-white py-2 px-4 hover:bg-purple-700"
-          >
-            List PG
-          </button>
-        </div>
-      </form>
     </div>
   );
-}
+};
 
 export default AddPG;

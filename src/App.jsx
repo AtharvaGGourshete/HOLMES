@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./App.css";
 import Landing from "./pages/landing";
 import Education from "./pages/Education";
-import { Locations } from "./pages/locations";
+import Locations from "./pages/locations";
 import { AppWindow } from "lucide-react";
 import AppLayout from "./layouts/app-layout";
 import Favourites from "./components/favourites";

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import supabase from "@/config/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -19,7 +20,8 @@ import { Heart, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 
-export function Locations() {
+export default function Locations() {
+  const [pgData, setPgData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
@@ -28,98 +30,6 @@ export function Locations() {
   const [favourites, setFavourites] = useState([]);
   const [priceSliderValue, setPriceSliderValue] = useState([12000]);
   const navigate = useNavigate();
-
-  const pgData = [
-    {
-      name: "Sunrise PG",
-      location: "Andheri, Mumbai",
-      price: "₹8,000/month",
-      features: "WiFi, Meals, Laundry",
-      image:
-        "https://img.staticmb.com/mbphoto/pg/grd2/cropped_images/2024/Nov/07/full_photo/GR2-470723-2302073.jpeg",
-      liked: false,
-      rating: 5, // Added rating
-    },
-    {
-      name: "Cozy Nest PG",
-      location: "Bandra, Mumbai",
-      price: "₹10,000/month",
-      features: "Air Conditioning, 24x7 Security",
-      image:
-        "https://img.staticmb.com/mbphoto/pg/grd2/cropped_images/2024/May/03/full_photo/GR2-438977-2121783.jpeg",
-      liked: false,
-      rating: 4.2, // Added rating
-    },
-    {
-      name: "Urban Stay PG",
-      location: "Dadar, Mumbai",
-      price: "₹7,500/month",
-      features: "Shared Kitchen, Housekeeping",
-      image:
-        "https://gsh-cdn.sgp1.cdn.digitaloceanspaces.com/assets/img/no-broker-thane/PRT687/room-on-rent-in-thane/pg-in-bhiwandi.jpg",
-      liked: false,
-      rating: 4, // Initial liked status
-    },
-    {
-      name: "Comfort Zone PG",
-      location: "Thane, Mumbai",
-      price: "₹6,000/month",
-      features: "Power Backup, Parking",
-      image:
-        "https://img.staticmb.com/mbphoto/pg/grd2/cropped_images/2022/Oct/08/Photo_h220_w280/GR2-322143-1518507_220_280.jpg",
-      liked: false,
-      rating: 3, // Initial liked status
-    },
-    {
-      name: "Elite Stay PG",
-      location: "Bandra, Mumbai",
-      price: "₹12,000/month",
-      features: "Gym, Meals, Security",
-      image: "https://www.colive.com/blog/wp-content/uploads/2018/04/qedqd.jpg",
-      liked: false,
-      rating: 3.5, // Initial liked status
-    },
-    {
-      name: "Affordable PG",
-      location: "Andheri, Mumbai",
-      price: "₹5,500/month",
-      features: "Basic Amenities, Shared Rooms",
-      image:
-        "https://www.realtynmore.com/wp-content/uploads/2023/09/b2835151fd0aebf6702be15777e4683e3eb73704-scaled.jpg",
-      liked: false,
-      rating: 5, // Initial liked status
-    },
-    {
-      name: "Lux PG",
-      location: "Dadar, Mumbai",
-      price: "₹9,000/month",
-      features: "Private Rooms, WiFi",
-      image:
-        "https://shreedurgapg.com/wp-content/uploads/2022/11/PG-accommodations-in-Gurgaon-Shree-Durga-PG.jpg",
-      liked: false,
-      rating: 2.7, // Initial liked status
-    },
-    {
-      name: "Thane Stay PG",
-      location: "Thane, Mumbai",
-      price: "₹6,500/month",
-      features: "Laundry, WiFi, 24x7 Security",
-      image:
-        "https://content.jdmagicbox.com/comp/def_content/paying_guest_accommodations/default-paying-guest-accommodations-6.jpg",
-      liked: false,
-      rating: 4.1, // Initial liked status
-    },
-    {
-      name: "Ap shah ",
-      location: "Thane, Mumbai",
-      price: "₹6,500/month",
-      features: "Laundry, WiFi, 24x7 Security",
-      image:
-        "https://content.jdmagicbox.com/comp/def_content/paying_guest_accommodations/default-paying-guest-accommodations-6.jpg",
-      liked: false,
-      rating: 4.1, // Initial liked status
-    },
-  ];
 
   const amenitiesOptions = [
     "WiFi",
@@ -137,6 +47,33 @@ export function Locations() {
     setFavourites(savedFavourites);
   }, []);
 
+  // Fetch PGs from Supabase
+  useEffect(() => {
+    const fetchPGs = async () => {
+      const { data, error } = await supabase.from("insert_pg").select("*");
+      if (error) {
+        console.error("Error fetching PG data:", error.message);
+      } else {
+        // Ensure structure matches UI expectation
+        const formattedData = data.map((pg) => ({
+          name: pg.PG_Name,
+          location: pg.Address || "Unknown",
+          price: `₹${pg.Rent_Price}/month`,
+          features: pg.Amenities || "Basic Amenities",
+          image: pg.img || "https://www.hostelworld.com/blog/wp-content/uploads/2018/06/hostel-room-types-5.jpg",
+          liked: false,
+          rating: parseFloat(pg.Rating) || 3,
+          amenities: pg.amenities
+        }));
+        
+        setPgData(formattedData);
+        
+      }
+    };
+
+    fetchPGs();
+  }, []);
+
   const handleSearch = () => {
     return pgData.filter((pg) => {
       const matchesText = pg.name
@@ -146,7 +83,7 @@ export function Locations() {
         ? pg.location.toLowerCase().includes(selectedLocation.toLowerCase())
         : true;
       const matchesPrice =
-        parseInt(pg.price.replace(/[^0-9]/g, "")) <= priceSliderValue; // Use priceSliderValue instead of input
+        parseInt(pg.price.replace(/[^0-9]/g, "")) <= priceSliderValue;
       const matchesAmenities = amenitiesFilter.every((amenity) =>
         pg.features.toLowerCase().includes(amenity.toLowerCase())
       );
@@ -186,10 +123,6 @@ export function Locations() {
     );
   };
 
-  const matchesRatings = ratingsFilter
-    ? parseFloat(pgData.rating) >= parseFloat(ratingsFilter)
-    : true;
-
   return (
     <>
       <div className="flex min-h-screen bg-white">
@@ -198,14 +131,11 @@ export function Locations() {
           <h2 className="text-lg font-bold mb-4">Filters</h2>
 
           {/* Price Filter */}
-          {/* Price Filter */}
           <div className="mb-6">
             <h3 className="font-semibold mb-2">Price</h3>
             <Slider
               value={[priceSliderValue]}
-              onValueChange={(value) => {
-                setPriceSliderValue(value[0]); // Update the slider value dynamically
-              }}
+              onValueChange={(value) => setPriceSliderValue(value[0])}
               min={1000}
               max={15000}
               step={500}
@@ -221,18 +151,18 @@ export function Locations() {
           {/* Ratings Filter */}
           <div className="mb-6">
             <h3 className="font-semibold mb-2">Ratings</h3>
-            <Select onValueChange={setRatingsFilter}>
-              <SelectTrigger className="w-full rounded-3xl">
-                <SelectValue placeholder="Select Ratings" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="5">5 Stars</SelectItem>
-                <SelectItem value="4">4 Stars & Up</SelectItem>
-                <SelectItem value="3">3 Stars & Up</SelectItem>
-                <SelectItem value="2">2 Stars & Up</SelectItem>
-                <SelectItem value="1">1 Star & Up</SelectItem>
-              </SelectContent>
-            </Select>
+              {/* <Select onValueChange={setRatingsFilter}>
+                <SelectTrigger className="w-full rounded-3xl">
+                  <SelectValue placeholder="Select Ratings" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="5">5 Stars</SelectItem>
+                  <SelectItem value="4">4 Stars & Up</SelectItem>
+                  <SelectItem value="3">3 Stars & Up</SelectItem>
+                  <SelectItem value="2">2 Stars & Up</SelectItem>
+                  <SelectItem value="1">1 Star & Up</SelectItem>
+                </SelectContent>
+              </Select> */}
           </div>
 
           {/* Amenities Filter */}
@@ -267,18 +197,18 @@ export function Locations() {
               onChange={(e) => setSearchText(e.target.value)}
               className="flex-grow rounded-full"
             />
-            <Select onValueChange={setSelectedLocation}>
+            {/* <Select onValueChange={setSelectedLocation}>
               <SelectTrigger className="w-48 rounded-full">
                 <SelectValue placeholder="Filter by Location" />
               </SelectTrigger>
               <SelectContent className="bg-white rounded-2xl mt-2 shadow-2xl">
-                <SelectItem value="all">All Locations</SelectItem>
+                <SelectItem value="">All Locations</SelectItem>
                 <SelectItem value="andheri">Andheri</SelectItem>
                 <SelectItem value="bandra">Bandra</SelectItem>
                 <SelectItem value="dadar">Dadar</SelectItem>
                 <SelectItem value="thane">Thane</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
 
           {/* PG Cards Section */}
@@ -289,25 +219,24 @@ export function Locations() {
                   key={index}
                   className="relative bg-white shadow-md rounded-2xl overflow-hidden"
                 >
-                  {/* Background Image */}
                   <img
                     src={pg.image}
+        
                     alt={pg.name}
-                    className="absolute inset-0 object-cover w-full h-full "
+                    className="absolute inset-0 object-cover w-full h-full"
                   />
-
-                  {/* Overlay Content */}
                   <div className="relative z-10 p-6 bg-gradient-to-b from-transparent to-black rounded-2xl">
                     <CardHeader>
                       <h2 className="text-lg font-bold text-white">
                         {pg.name}
+                        
                       </h2>
                       <p className="text-gray-300">{pg.location}</p>
                     </CardHeader>
                     <CardContent>
                       <p className="text-gray-100">{pg.price}</p>
-
                       <p className="text-gray-400">{pg.features}</p>
+                      <p className="text-gray-400">{pg.amenities}</p>
                       <div className="flex items-center mt-2">
                         {[...Array(5)].map((_, starIndex) => (
                           <span key={starIndex}>
@@ -329,13 +258,10 @@ export function Locations() {
                       <Button
                         variant="outline"
                         className="text-black bg-white border-white hover:text-white rounded-full"
-                        onClick={() =>
-                          navigate("/pg-details", { state: { pg } })
-                        }
+                        onClick={() => navigate("/pg-details", { state: { pg } })}
                       >
                         View Details
                       </Button>
-
                       <button
                         onClick={() => handleLikeToggle(pg)}
                         className="ml-2 text-xl"

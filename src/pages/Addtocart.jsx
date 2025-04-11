@@ -1,101 +1,126 @@
-"use client";
-import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import SplitText from "@/components/ui/SplitText";
-import { Link } from "react-router-dom";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Heart, Star } from "lucide-react";
+import Footer from "@/components/Footer";
 
-export default function Addtocart() {
-  const { toast } = useToast();
-  const [cart, setCart] = useState([]); // Store PGs in state
+export default function Cart() {
+  const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch cart items from localStorage when the component mounts
+  // Load cart items from localStorage on mount
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
+    setCartItems(storedCart);
   }, []);
 
-  // Remove PG from cart
-  const removeFromCart = (pgId) => {
-    const updatedCart = cart.filter((item) => item.id !== pgId);
-    setCart(updatedCart);
+  // Handle removing an item from the cart
+  const handleRemoveFromCart = (pgName) => {
+    const updatedCart = cartItems.filter((item) => item.name !== pgName);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setCartItems(updatedCart);
   };
 
-  const handleAnimationComplete = () => {
-    console.log("Cart is empty");
-  };
+  // Handle like toggle (optional, if you want to keep favourites functionality)
+  const handleLikeToggle = (pg) => {
+    let favourites = JSON.parse(localStorage.getItem("favourites")) || [];
+    const isLiked = favourites.some((item) => item.name === pg.name);
 
-  function handleClick() {
-    return toast({ title: "PG Selected Proceed with Payment" });
-  }
+    if (isLiked) {
+      favourites = favourites.filter((item) => item.name !== pg.name);
+    } else {
+      favourites = [...favourites, pg];
+    }
+
+    localStorage.setItem("favourites", JSON.stringify(favourites));
+  };
 
   return (
-    <div className="min-h-screen p-10">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden p-6">
-        <h1 className="text-2xl font-bold text-black mb-4 text-center">
-          Your Cart
-        </h1>
-
-        {cart.length === 0 ? (
-          <p className="text-gray-500 text-center">
-            <SplitText
-              text="Your cart is empty!!"
-              className="text-2xl font-semibold text-center"
-              delay={150}
-              animationFrom={{ opacity: 0, transform: "translate3d(0,50px,0)" }}
-              animationTo={{ opacity: 1, transform: "translate3d(0,0,0)" }}
-              easing="easeOutCubic"
-              threshold={0.2}
-              rootMargin="-50px"
-              onLetterAnimationComplete={handleAnimationComplete}
-            />
-          </p>
+    <>
+      <div className="min-h-screen bg-white p-6">
+        <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
+        {cartItems.length === 0 ? (
+          <p className="text-center text-gray-500">Your cart is empty.</p>
         ) : (
-          <ul>
-            {cart.map((pg) => (
-              <li key={pg.id} className="border-b py-4 flex items-center">
-                <div>
-                  <h2 className="text-lg font-semibold text-black">
-                    {pg.name}
-                  </h2>
-                  <p className="text-gray-500">{pg.location}</p>
-                  <p className="text-gray-800 font-semibold">{pg.price}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cartItems.map((pg, index) => (
+              <Card
+                key={index}
+                className="relative bg-white shadow-md rounded-2xl overflow-hidden"
+              >
+                <img
+                  src={pg.image}
+                  alt={pg.name}
+                  className="absolute inset-0 object-cover w-full h-full"
+                />
+                <div className="relative z-10 p-6 bg-gradient-to-b from-transparent to-black rounded-2xl">
+                  <CardHeader>
+                    <h2 className="text-lg font-bold text-white">{pg.name}</h2>
+                    <p className="text-gray-300">{pg.location}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-100">{pg.price}</p>
+                    <p className="text-gray-400">{pg.features}</p>
+                    <div className="flex items-center mt-2">
+                      {[...Array(5)].map((_, starIndex) => (
+                        <span key={starIndex}>
+                          <Star
+                            size={16}
+                            fill={
+                              starIndex < Math.floor(pg.rating)
+                                ? "gold"
+                                : "none"
+                            }
+                            stroke="gold"
+                          />
+                        </span>
+                      ))}
+                      <span className="ml-2 text-gray-300">{pg.rating}</span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between items-center">
+                    <Button
+                      variant="outline"
+                      className="text-black bg-white border-white hover:text-white rounded-full"
+                      onClick={() => navigate("/payment", { state: { pg } })}
+                    >
+                      Add Payemnt Methods
+                    </Button>
+                    <div className="flex gap-2">
+                      {/* <button
+                        onClick={() => handleLikeToggle(pg)}
+                        className="text-xl"
+                      >
+                        {(
+                          JSON.parse(localStorage.getItem("favourites")) || []
+                        ).some((item) => item.name === pg.name) ? (
+                          <Heart size={20} stroke="red" fill="red" />
+                        ) : (
+                          <Heart size={20} className="text-white" />
+                        )}
+                      </button> */}
+                      <Button
+                        variant="destructive"
+                        className="rounded-full bg-red-600 hover:bg-red-700"
+                        onClick={() => handleRemoveFromCart(pg.name)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </CardFooter>
                 </div>
-                <div className="ml-auto flex gap-4">
-                <Link to="/payment-method">
-                  <Button
-                    onClick={handleClick}
-                    className="bg-green-500 hover:bg-green-300 text-white rounded-xl"
-                  >
-                    Proceed
-                  </Button>
-                  </Link>
-                  <Button
-                    onClick={() => removeFromCart(pg.id)}
-                    className="bg-red-500 hover:bg-red-300 text-white rounded-xl"
-                  >
-                    Remove
-                  </Button>
-                  
-                </div>
-              </li>
+              </Card>
             ))}
-          </ul>
+          </div>
         )}
-
-        <div className="mt-6 flex justify-center">
-          <Button
-            onClick={() => navigate("/listed-PGs")}
-            className="bg-purple-500 hover:bg-purple-300 text-black rounded-xl"
-          >
-            Continue Browsing
-          </Button>
-        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
