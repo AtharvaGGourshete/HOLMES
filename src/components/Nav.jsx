@@ -21,6 +21,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ClickSpark from "./ui/ClickSpark/ClickSpark";
 
 const ADMIN_EMAILS = ["yadnesh2105@gmail.com", "goursheteatharva@gmail.com"];
 
@@ -75,6 +76,13 @@ function Nav() {
         href="https://fonts.googleapis.com/css2?family=Playwrite+AU+SA:wght@100..400&display=swap"
         rel="stylesheet"
       />
+      <ClickSpark
+        sparkColor="#000000"
+        sparkSize={10}
+        sparkRadius={15}
+        sparkCount={8}
+        duration={400}
+      >
       <div className="bg-white rounded-2xl mx-auto w-11/12 mt-4">
         <nav className="flex justify-between items-center px-6 py-4 md:px-20 bg-white relative">
           {/* Logo */}
@@ -175,26 +183,7 @@ function Nav() {
                       About Us
                     </Button>
                   </Link>
-                  <UserButton
-                    appearance={{
-                      elements: {
-                        avatarBox: "w-10 h-10",
-                      },
-                    }}
-                  >
-                    <UserButton.MenuItems>
-                      <UserButton.Link
-                        label="Favourite PGs"
-                        labelIcon={<Heart size={15} className="text-purple-600" />}
-                        href="/favourites-pgs"
-                      />
-                      <UserButton.Link
-                        label="Cart"
-                        labelIcon={<ShoppingCart size={15} className="text-purple-600" />}
-                        href="/cart"
-                      />
-                    </UserButton.MenuItems>
-                  </UserButton>
+                  
                 </SignedIn>
               </div>
             </div>
@@ -211,6 +200,7 @@ function Nav() {
           </div>
         )}
       </div>
+      </ClickSpark>
     </>
   );
 }
