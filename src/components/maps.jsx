@@ -20,8 +20,6 @@ const OpenLayersMap = () => {
         zoom: 2,
       }),
     });
-  
-    // Cleanup function to prevent duplicate maps
     return () => map.setTarget(null);
   }, []);
   
