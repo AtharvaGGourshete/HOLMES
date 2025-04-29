@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 const AppLayout = () => {
   return (
+    
     <div className='bg-white'>
      
      <main className='min-h-screen'>

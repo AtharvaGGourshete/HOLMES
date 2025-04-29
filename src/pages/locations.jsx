@@ -167,7 +167,7 @@ export default function Locations() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <PropagateLoader color="#2563eb" />
+        <PropagateLoader color="#800080" />
       </div>
     );
   }
@@ -180,9 +180,9 @@ export default function Locations() {
       sparkCount={8}
       duration={400}
     >
-      <div className="flex flex-col min-h-screen bg-gray-50 mx-10">
+      <div className="flex flex-col min-h-screen bg-white">
         {/* Navbar */}
-        <header className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
+        <header className="flex items-center justify-between p-4 bg-white shadow-sm">
           <div className="flex items-center">
             <Sheet>
               <SheetTrigger asChild>
@@ -321,15 +321,15 @@ export default function Locations() {
                 </ScrollArea>
               </SheetContent>
             </Sheet>
-            <h1 className="text-2xl font-semibold text-gray-800">
+            {/* <h1 className="text-2xl font-semibold text-gray-800">
               PG Listings
-            </h1>
+            </h1> */}
           </div>
           {/* Cart Button */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                {/* <Button
                   variant="ghost"
                   className="relative hover:bg-gray-100 rounded-full p-2 transition-all duration-300 hover:scale-110"
                   onClick={() => navigate("/cart")}
@@ -341,7 +341,7 @@ export default function Locations() {
                       {cartCount}
                     </span>
                   )}
-                </Button>
+                </Button> */}
               </TooltipTrigger>
               <TooltipContent>
                 <p>View Cart ({cartCount} items)</p>
