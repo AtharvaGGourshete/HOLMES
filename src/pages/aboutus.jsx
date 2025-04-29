@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Linkedin } from "lucide-react";
+import ClickSpark from "@/components/ui/ClickSpark/ClickSpark";
 
 export function AboutUs() {
   const teamMembers = [
@@ -20,7 +21,7 @@ export function AboutUs() {
       description:
         "Yadnesh expertly managed HOLMES’ backend, ensuring secure, efficient, and scalable systems for a smooth and safe PG accommodation experience.",
       image: IMAGES.image1,
-      link: "https://www.linkedin.com/in/atharva-gourshete-b2a66927b/",
+      link: "https://www.linkedin.com/in/yadneshbamne21/",
     },
     {
       name: "Atharva Gourshete",

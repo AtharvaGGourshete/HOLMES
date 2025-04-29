@@ -142,7 +142,7 @@ export default function Cart() {
               <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-600 text-lg mb-4">Your cart is empty.</p>
               <Button
-                onClick={() => navigate("/locations")}
+                onClick={() => navigate("/listed-PGs")}
                 className="bg-[#FF9F1C] hover:bg-orange-600 text-black rounded-full px-6 flex items-center gap-2 mx-auto"
                 aria-label="Continue shopping"
               >
@@ -237,7 +237,7 @@ export default function Cart() {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <AlertDialog>
+                                <AlertDialog >
                                   <AlertDialogTrigger asChild>
                                     <Button
                                       variant="destructive"
@@ -247,7 +247,7 @@ export default function Cart() {
                                       Remove
                                     </Button>
                                   </AlertDialogTrigger>
-                                  <AlertDialogContent>
+                                  <AlertDialogContent className="bg-white text-black">
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>
                                         Remove Item
@@ -258,13 +258,14 @@ export default function Cart() {
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>
+                                      <AlertDialogCancel className="bg-red-100 text-red-600 hover:bg-red-200 rounded-full">
                                         Cancel
                                       </AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() =>
                                           handleRemoveFromCart(pg.name)
                                         }
+                                        className="bg-black text-white hover:bg-white hover:text-black rounded-full"
                                       >
                                         Remove
                                       </AlertDialogAction>
